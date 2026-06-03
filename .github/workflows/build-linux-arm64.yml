@@ -1,0 +1,46 @@
+name: 🛠 Build linux arm64
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'arm64-*'
+
+env:
+  GODOT_VERSION: 4.5
+  FMOD_VERSION: 20306
+  TARGET_PATH: demo/addons/fmod/libs/
+  TARGET_NAME: libGodotFmod
+
+jobs:
+  build-linux-arm64:
+    name: Linux arm64 (Godot ${{ env.GODOT_VERSION }} / FMOD ${{ env.FMOD_VERSION }})
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [template_release, template_debug, editor]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+          submodules: recursive
+
+      - name: Compile native plugin (linux arm64)
+        uses: ./.github/actions/create-native-build
+        with:
+          platform: linux
+          target: ${{ matrix.target }}
+          flags: arch=arm64
+          fmod-executable-suffix: linux.tar.gz
+          fmod-user: ${{ secrets.FMODUSER }}
+          fmod-password: ${{ secrets.FMODPASS }}
+          shell: bash
+
+      - name: Upload arm64 .so
+        uses: actions/upload-artifact@v4
+        with:
+          name: libGodotFmod-linux-arm64-${{ matrix.target }}
+          path: demo/addons/fmod/libs/linux/*.arm64.so
+          if-no-files-found: error
