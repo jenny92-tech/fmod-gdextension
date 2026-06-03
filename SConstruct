@@ -76,7 +76,9 @@ elif env["platform"] == "linux":
 
     env.Append(CCFLAGS=["-fPIC", "-Wwrite-strings"])
     env.Append(LINKFLAGS=["-Wl,-R,'$$ORIGIN'"])
-    env.Append(LINKFLAGS=["-m64", "-fuse-ld=gold"])
+    # -m64 / gold are x86_64-specific; aarch64 toolchains reject -m64 and may lack gold.
+    if env["arch"] == "x86_64":
+        env.Append(LINKFLAGS=["-m64", "-fuse-ld=gold"])
 
 elif env["platform"] == "windows":
     libfmod = 'fmod%s_vc'% lfix
